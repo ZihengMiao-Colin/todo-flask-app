@@ -23,7 +23,7 @@
 
         .container {
             width: 100%;
-            max-width: 560px;
+            max-width: 860px;
         }
 
         h1 {
@@ -38,10 +38,10 @@
         .add-form {
             display: flex;
             gap: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
-        .add-form input {
+        .add-form input[type="text"] {
             flex: 1;
             padding: 12px 16px;
             border: 2px solid #e0e0e0;
@@ -51,7 +51,22 @@
             transition: border-color 0.2s;
         }
 
-        .add-form input:focus {
+        .add-form input[type="text"]:focus {
+            border-color: #4f6ef7;
+        }
+
+        .add-form select {
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .add-form select:focus {
             border-color: #4f6ef7;
         }
 
@@ -71,31 +86,73 @@
             background: #3b5de7;
         }
 
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .column {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .column-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f2f5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-title .count {
+            font-size: 13px;
+            font-weight: 400;
+            color: #888;
+            background: #f0f2f5;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .column-incomplete .column-title { color: #e65100; }
+        .column-completed .column-title { color: #2e7d32; }
+
         .todo-list {
             list-style: none;
             display: flex;
             flex-direction: column;
             gap: 8px;
+            min-height: 40px;
         }
 
         .todo-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: #fff;
-            padding: 14px 18px;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            transition: box-shadow 0.2s;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fafbfc;
+            transition: background 0.2s;
         }
 
         .todo-item:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: #f0f2f5;
         }
 
         .todo-content {
             flex: 1;
-            font-size: 15px;
+            font-size: 14px;
             word-break: break-word;
         }
 
@@ -105,10 +162,10 @@
         }
 
         .btn {
-            padding: 7px 14px;
+            padding: 5px 10px;
             border: none;
-            border-radius: 7px;
-            font-size: 13px;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
@@ -146,11 +203,36 @@
             background: #f8bbd0;
         }
 
+        .priority-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .priority-high {
+            background: #fce4ec;
+            color: #c62828;
+        }
+
+        .priority-medium {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .priority-low {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
         .empty {
             text-align: center;
-            color: #999;
-            padding: 48px 0;
-            font-size: 15px;
+            color: #bbb;
+            padding: 20px 0;
+            font-size: 13px;
         }
 
         .stats {
@@ -167,34 +249,73 @@
 
         <form class="add-form" action="/add" method="POST">
             <input type="text" name="content" placeholder="添加新的待办事项..." required autofocus>
+            <select name="priority">
+                <option value="medium">中</option>
+                <option value="high">高</option>
+                <option value="low">低</option>
+            </select>
             <button type="submit">添加</button>
         </form>
 
         {% if todos %}
-        <ul class="todo-list">
-            {% for todo in todos %}
-            <li class="todo-item">
-                <span class="todo-content {{ 'completed' if todo.completed else '' }}">
-                    {{ todo.content }}
-                </span>
-                <a href="/toggle/{{ todo.id }}">
-                    <button class="btn btn-toggle {{ 'undo' if todo.completed else '' }}">
-                        {{ '撤销' if todo.completed else '完成' }}
-                    </button>
-                </a>
-                <a href="/delete/{{ todo.id }}">
-                    <button class="btn btn-delete">删除</button>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
+        <div class="columns">
+            <div class="column column-incomplete">
+                <div class="column-title">
+                    未完成
+                    <span class="count">{{ todos | rejectattr('completed') | list | length }}</span>
+                </div>
+                <ul class="todo-list">
+                    {% for todo in todos if not todo.completed %}
+                    <li class="todo-item">
+                        <span class="priority-badge priority-{{ todo.priority }}">
+                            {{ priority_labels[todo.priority] }}
+                        </span>
+                        <span class="todo-content">{{ todo.content }}</span>
+                        <a href="/toggle/{{ todo.id }}">
+                            <button class="btn btn-toggle">完成</button>
+                        </a>
+                        <a href="/delete/{{ todo.id }}">
+                            <button class="btn btn-delete">删除</button>
+                        </a>
+                    </li>
+                    {% else %}
+                    <div class="empty">全部完成！</div>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="column column-completed">
+                <div class="column-title">
+                    已完成
+                    <span class="count">{{ todos | selectattr('completed') | list | length }}</span>
+                </div>
+                <ul class="todo-list">
+                    {% for todo in todos if todo.completed %}
+                    <li class="todo-item">
+                        <span class="priority-badge priority-{{ todo.priority }}">
+                            {{ priority_labels[todo.priority] }}
+                        </span>
+                        <span class="todo-content completed">{{ todo.content }}</span>
+                        <a href="/toggle/{{ todo.id }}">
+                            <button class="btn btn-toggle undo">撤销</button>
+                        </a>
+                        <a href="/delete/{{ todo.id }}">
+                            <button class="btn btn-delete">删除</button>
+                        </a>
+                    </li>
+                    {% else %}
+                    <div class="empty">暂无已完成</div>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
         {% else %}
-        <div class="empty">还没有待办事项，添加一个吧。</div>
+        <div class="empty" style="padding: 48px 0;">还没有待办事项，添加一个吧。</div>
         {% endif %}
 
         {% if todos %}
         <div class="stats">
-            {{ todos | selectattr('completed', 'equalto', true) | list | length }} / {{ todos | length }} 已完成
+            {{ todos | selectattr('completed') | list | length }} / {{ todos | length }} 已完成
         </div>
         {% endif %}
     </div>
